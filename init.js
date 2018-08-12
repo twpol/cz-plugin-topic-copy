@@ -8,8 +8,8 @@ plugin.id = 'topic-copy';
 plugin.init =
 function _init(glob) {
     this.major = 1;
-    this.minor = 0;
-    this.version = this.major + '.' + this.minor + ' (27 Jul 2018)';
+    this.minor = 1;
+    this.version = this.major + '.' + this.minor + ' (12 Aug 2018)';
     this.description = 'Copies topic changes into chat for non-IRC linked platforms. ' +
     "By James Ross <chatzilla-plugins@james-ross.co.uk>.";
 
@@ -37,10 +37,11 @@ function _disable() {
 plugin.onTopic =
 function _ontopic(e) {
     try {
-        var topic = e.channel.topic;
-        var channels = plugin.prefs['channels'].split(',');
+        const channels = plugin.prefs['channels'].split(',');
         if (channels.includes(e.channel.getURL())) {
-            e.channel.dispatch('say [Topic changed by ' + e.user.unicodeName + '] ' + topic);
+            const topic = e.channel.topic.replace(/\b(\w)(\w+)\b/g, '$1\u200B$2');
+            const user = e.user.unicodeName.replace(/\b(\w)(\w+)\b/g, '$1\u200B$2');
+            e.channel.dispatch('say [Topic changed by ' + user + '] ' + topic);
         }
     } catch (ex) {
         client.display('Topic Copy: ' + formatException(ex));
