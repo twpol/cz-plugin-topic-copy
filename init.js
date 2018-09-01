@@ -39,7 +39,7 @@ function _ontopic(e) {
     try {
         const channels = plugin.prefs['channels'].split(',');
         if (channels.includes(e.channel.getURL())) {
-            const topic = e.channel.topic.replace(/\b(\w)(\w+)\b/g, '$1\u200B$2').replace(/(h\u200Bttp:|w\u200Bww\.)\S+/g, function(text) { return text.replace(/\u200B/g, '') });
+            const topic = e.channel.topic.replace(/\b(\w)(\w+)\b/g, '$1\u200B$2').replace(/(h\u200Bttps?:|w\u200Bww\.)\S+/g, function(text) { return text.replace(/\u200B/g, '') });
             const user = e.user.unicodeName.replace(/\b(\w)(\w+)\b/g, '$1\u200B$2');
             e.channel.dispatch('say [Topic changed by ' + user + '] ' + topic);
         }
