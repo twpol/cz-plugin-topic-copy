@@ -8,8 +8,8 @@ plugin.id = 'topic-copy';
 plugin.init =
 function _init(glob) {
     this.major = 1;
-    this.minor = 2;
-    this.version = this.major + '.' + this.minor + ' (01 Sep 2018)';
+    this.minor = 3;
+    this.version = this.major + '.' + this.minor + ' (16 Mar 2019)';
     this.description = 'Copies topic changes into chat for non-IRC linked platforms. ' +
     "By James Ross <chatzilla-plugins@james-ross.co.uk>.";
 
@@ -25,12 +25,18 @@ function _enable() {
     ],
         plugin.onTopic,
         plugin.id + '-channel-topic');
+    client.eventPump.addHook([
+        { set: 'channel', type: 'privmsg' }
+    ],
+        plugin.onPrivmsg,
+        plugin.id + '-channel-privmsg');
     return true;
 }
 
 plugin.disable =
 function _disable() {
     client.eventPump.removeHookByName(plugin.id + '-channel-topic');
+    client.eventPump.removeHookByName(plugin.id + '-channel-privmsg');
     return true;
 }
 
@@ -39,11 +45,30 @@ function _ontopic(e) {
     try {
         const channels = plugin.prefs['channels'].split(',');
         if (channels.includes(e.channel.getURL())) {
-            const topic = e.channel.topic.replace(/\b(\w)(\w+)\b/g, '$1\u200B$2').replace(/(h\u200Bttps?:|w\u200Bww\.)\S+/g, function(text) { return text.replace(/\u200B/g, '') });
+            const topic = sanitizeTopic(e.channel.topic);
             const user = e.user.unicodeName.replace(/\b(\w)(\w+)\b/g, '$1\u200B$2');
             e.channel.dispatch('say [Topic changed by ' + user + '] ' + topic);
         }
     } catch (ex) {
-        client.display('Topic Copy: ' + formatException(ex));
+        client.display('Topic Copy (ontopic): ' + formatException(ex));
     }
+}
+
+plugin.onPrivmsg =
+function _onprivmsg(e) {
+    try {
+        const channels = plugin.prefs['channels'].split(',');
+        if (channels.includes(e.channel.getURL())) {
+            if (/^!topic$/.test(e.msg)) {
+                const topic = sanitizeTopic(e.channel.topic);
+                e.channel.dispatch('say [Topic] ' + topic);
+            }
+        }
+    } catch (ex) {
+        client.display('Topic Copy (onprivmsg): ' + formatException(ex));
+    }
+}
+
+function sanitizeTopic(topic) {
+    return topic.replace(/\b(\w)(\w+)\b/g, '$1\u200B$2').replace(/(h\u200Bttps?:|w\u200Bww\.)\S+/g, function(text) { return text.replace(/\u200B/g, '') });
 }
