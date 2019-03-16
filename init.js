@@ -8,7 +8,7 @@ plugin.id = 'topic-copy';
 plugin.init =
 function _init(glob) {
     this.major = 1;
-    this.minor = 3;
+    this.minor = 4;
     this.version = this.major + '.' + this.minor + ' (16 Mar 2019)';
     this.description = 'Copies topic changes into chat for non-IRC linked platforms. ' +
     "By James Ross <chatzilla-plugins@james-ross.co.uk>.";
@@ -62,6 +62,13 @@ function _onprivmsg(e) {
             if (/^!topic$/.test(e.msg)) {
                 const topic = sanitizeTopic(e.channel.topic);
                 e.channel.dispatch('say [Topic] ' + topic);
+            } else if (/^!topic-set /.test(e.msg)) {
+                const newTopic = desanitizeTopic(e.msg.substring(11));
+                e.channel.dispatch('topic ' + newTopic);
+            } else if (/^!topic-replace /.test(e.msg)) {
+                const topicChanges = desanitizeTopic(e.msg.substring(15)).split('|||');
+                const newTopic = e.channel.topic.replace(topicChanges[0], topicChanges[1]);
+                e.channel.dispatch('topic ' + newTopic);
             }
         }
     } catch (ex) {
@@ -71,4 +78,8 @@ function _onprivmsg(e) {
 
 function sanitizeTopic(topic) {
     return topic.replace(/\b(\w)(\w+)\b/g, '$1\u200B$2').replace(/(h\u200Bttps?:|w\u200Bww\.)\S+/g, function(text) { return text.replace(/\u200B/g, '') });
+}
+
+function desanitizeTopic(topic) {
+    return topic.replace(/\u200B/g, '');
 }
